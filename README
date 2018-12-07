@@ -6,6 +6,12 @@ variables. You can read details of the motivation and hardware project plans
 on my blog post:
 https://bitbanksoftware.blogspot.com/2018/12/optimizing-your-nrf24-range-with-simple.html
 
+It makes use of 3 libraries (2 written by me):
+
+https://github.com/bitbank2/oled_96
+https://github.com/bitbank2/BitBang_I2C
+https://github.com/nRF24/RF24
+
 Copyright (c) 2018 BitBank Software, Inc.
 Written by Larry Bank
 bitbank@pobox.com
