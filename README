@@ -1,0 +1,12 @@
+NRF24 Test Rig
+--------------
+An Arduino sketch for the ATmega328P (aka Arduino Pro Mini) which allows
+testing of nRF24 wireless transceiver modules while manipulating multiple
+variables. You can read details of the motivation and hardware project plans
+on my blog post:
+https://bitbanksoftware.blogspot.com/2018/12/optimizing-your-nrf24-range-with-simple.html
+
+Copyright (c) 2018 BitBank Software, Inc.
+Written by Larry Bank
+bitbank@pobox.com
+
