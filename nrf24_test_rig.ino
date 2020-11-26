@@ -6,10 +6,11 @@
 //
 #include <BitBang_I2C.h>
 #include <RF24.h>
-#include <oled_96.h>
+#include <OneBitDisplay.h>
 
 static uint8_t iChannel, iPower;
 static int iPackets;
+static OBDISP obd;
 
 #define RF_PACKET_SIZE 8
 #define RF_PING    0x40
@@ -38,16 +39,16 @@ char szTemp[16];
   if (bTX) // tx mode
   {
     sprintf(szTemp, "Chan %d ", iChannel);
-    oledWriteString(0,1,szTemp, FONT_NORMAL, 0);
+    obdWriteString(&obd, 0,0,1,szTemp, FONT_8x8, 0, 1);
     sprintf(szTemp, "Pwr %d", iPower);
-    oledWriteString(0,2,szTemp, FONT_NORMAL, 0);
+    obdWriteString(&obd, 0,0,2,szTemp, FONT_8x8, 0, 1);
   }
   else // rx mode
   {
     sprintf(szTemp, "Chan %d ", iChannel);
-    oledWriteString(0,1,szTemp, FONT_NORMAL, 0);
+    obdWriteString(&obd, 0,0,1,szTemp, FONT_8x8, 0, 1);
     sprintf(szTemp, "Pkts: %d ", iPackets);
-    oledWriteString(0,2,szTemp, FONT_SMALL, 0);    
+    obdWriteString(&obd, 0,0,2,szTemp, FONT_6x8, 0, 1);    
   }
 } /* ShowStatus() */
 
@@ -58,12 +59,12 @@ void setup()
   pinMode(NRF24_IRQ_PIN, INPUT);
   
 // void oledInit(int iAddr, int iType, int bFlip, int bInvert, int sda, int scl)
- oledInit(0x3c, OLED_64x32, 0, 0, SDA_PIN, SCL_PIN);
- oledFill(0);
+ obdI2CInit(&obd, OLED_64x32, 0x3c,  0, 0, 0, SDA_PIN, SCL_PIN, -1, 400000);
+ obdFill(&obd, 0, 1);
  if (!radio.begin())
-    oledWriteString(0,0,(char *)"nRF24 bad",FONT_SMALL, 0);
+    obdWriteString(&obd, 0,0,0,(char *)"nRF24 bad",FONT_6x8, 0, 1);
  else
-    oledWriteString(0,0,(char *)"nRF24 good",FONT_SMALL, 0);
+    obdWriteString(&obd, 0,0,0,(char *)"nRF24 good",FONT_6x8, 0, 1);
 // setRetries(delay, count);
 // delay - How long to wait between each retry, in multiples of 250us,
 // max is 15.  0 means 250us, 15 means 4000us.
@@ -94,7 +95,7 @@ uint8_t u8B0, u8B1, u8OldB0, u8OldB1;
   
   if (digitalRead(BUTTON0) == LOW || digitalRead(BUTTON1) == LOW) // go into RX mode if either button pressed
   {
-    oledWriteString(0,0,(char *)"RX Mode ", FONT_NORMAL, 1);
+    obdWriteString(&obd, 0,0,0,(char *)"RX Mode ", FONT_8x8, 1, 1);
     radio.powerUp();
     radio.openReadingPipe(0, rxAddr);
     radio.startListening();
@@ -105,8 +106,8 @@ uint8_t u8B0, u8B1, u8OldB0, u8OldB1;
         u8B1 = digitalRead(BUTTON1);
         if (u8B0 == LOW && u8B1 == LOW) // both buttons pressed = reset
         {
-          oledFill(0);
-          oledWriteString(0,0,(char *)"Reset...", FONT_NORMAL, 0);
+          obdFill(&obd, 0, 1);
+          obdWriteString(&obd, 0,0,0,(char *)"Reset...", FONT_8x8, 0, 1);
           return; // allows for switching modes after powerup
         }
         if (u8B0 == LOW && u8B0 != u8OldB0) // channel up
@@ -140,16 +141,16 @@ uint8_t u8B0, u8B1, u8OldB0, u8OldB1;
           iPackets++;
           ShowStatus(0);
           if (bSignal) // good signal on return?
-            oledWriteString(0,3,(char *)"sig strong", FONT_SMALL, 0);
+            obdWriteString(&obd, 0,0,3,(char *)"sig strong", FONT_6x8, 0, 1);
           else
-            oledWriteString(0,3,(char *)"sig weak  ", FONT_SMALL, 0);
+            obdWriteString(&obd, 0,0,3,(char *)"sig weak  ", FONT_6x8, 0, 1);
         }
       } // IRQ indicates data is waiting
     }
   }
   else // TX mode
   {
-    oledWriteString(0,0,(char *)"TX Mode ", FONT_NORMAL, 1);
+    obdWriteString(&obd, 0,0,0,(char *)"TX Mode ", FONT_8x8, 1, 1);
     radio.powerUp();
     radio.stopListening();
     ShowStatus(1);
@@ -161,8 +162,8 @@ uint8_t u8B0, u8B1, u8OldB0, u8OldB1;
         u8B1 = digitalRead(BUTTON1);
         if (u8B0 == LOW && u8B1 == LOW) // both buttons pressed = reset
         {
-          oledFill(0);
-          oledWriteString(0,0,(char *)"Reset...", FONT_NORMAL, 0);
+          obdFill(&obd, 0, 1);
+          obdWriteString(&obd, 0, 0,0,(char *)"Reset...", FONT_8x8, 0, 1);
           return; // allows for switching modes after powerup
         }
         if (u8B0 == LOW && u8B0 != u8OldB0) // channel up
@@ -192,11 +193,11 @@ uint8_t u8B0, u8B1, u8OldB0, u8OldB1;
       ucTemp[0] = RF_PING;
       if (radio.write(ucTemp, RF_PACKET_SIZE)) // fixed size to make it easier for receiver
       {
-        oledWriteString(0,3,(char *)"Ack recvd ", FONT_SMALL, 0);
+        obdWriteString(&obd,0,0,3,(char *)"Ack recvd ", FONT_6x8, 0, 1);
       }
       else
       {
-        oledWriteString(0,3,(char *)"Ack failed", FONT_SMALL, 0);
+        obdWriteString(&obd, 0,0,3,(char *)"Ack failed", FONT_6x8, 0, 1);
       }
     } // while 1
   } // TX mode
